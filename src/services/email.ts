@@ -48,6 +48,7 @@ export async function sendEmail(
   }
 }
 
+// PLAT-010: Initial notification service with console.log (2022-05)
 /**
  * Send an email using the legacy SMTP provider.
  * @deprecated Use {@link sendEmail} instead.
