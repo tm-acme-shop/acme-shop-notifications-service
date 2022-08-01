@@ -1,11 +1,23 @@
+import { logger } from '../utils/logger';
+
+export async function sendSms(to: string, message: string): Promise<void> {
+  logger.info({ msg: "Sending SMS (v2)", to, messageLength: message.length });
+
+  try {
+    await simulateSmsProvider(to, message);
+    logger.info({ msg: "SMS sent successfully", to });
+  } catch (error) {
+    logger.error({ msg: "Failed to send SMS", to, error: String(error) });
+    throw error;
+  }
+}
+
 export async function sendSmsLegacy(to: string, message: string): Promise<void> {
   console.log("Sending SMS via legacy provider");
   console.log("SMS recipient:", to);
   console.log("SMS message length:", message.length);
 
-  // Simulated SMS sending - in production this would call Twilio or similar
   try {
-    // Direct SMS provider call
     await simulateSmsProvider(to, message);
     console.log("SMS sent successfully to", to);
   } catch (error) {
@@ -15,7 +27,6 @@ export async function sendSmsLegacy(to: string, message: string): Promise<void> 
 }
 
 async function simulateSmsProvider(to: string, message: string): Promise<void> {
-  // Simulate network latency
   await new Promise(resolve => setTimeout(resolve, 100));
   console.log("SMS provider responded for", to);
 }

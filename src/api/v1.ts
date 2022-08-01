@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { sendEmailLegacy } from '../services/email';
 import { sendSmsLegacy } from '../services/sms';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '../utils/logger';
 
 export const v1Router = Router();
 
@@ -19,6 +20,7 @@ v1Router.post('/send', async (req: Request, res: Response) => {
   const id = uuidv4();
 
   console.log("Received send request", { id, type, to });
+  logger.info({ msg: "Processing v1 send request", id, type, to });
 
   try {
     if (type === 'email') {
@@ -32,10 +34,11 @@ v1Router.post('/send', async (req: Request, res: Response) => {
     }
 
     notificationStore.set(id, { status: 'sent', type });
-    console.log("Notification sent successfully", { id });
+    logger.info({ msg: "Notification sent via v1 API", id });
     res.json({ id, status: 'sent' });
   } catch (error) {
     console.error("Failed to send notification:", error);
+    logger.error({ msg: "Failed to send notification", id, error: String(error) });
     notificationStore.set(id, { status: 'failed', type });
     res.status(500).json({ id, status: 'failed', error: 'Send failed' });
   }
