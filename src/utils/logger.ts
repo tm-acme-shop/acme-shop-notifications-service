@@ -19,6 +19,7 @@ const winstonLogger = winston.createLogger({
   ],
 });
 
+// PLAT-035: Structured logger for notifications service (2023-01)
 class StructuredLogger implements Logger {
   info(data: Record<string, unknown>): void {
     winstonLogger.info(data.msg as string, data);
