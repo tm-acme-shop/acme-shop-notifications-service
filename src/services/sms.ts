@@ -12,7 +12,13 @@ export async function sendSms(to: string, message: string): Promise<void> {
   }
 }
 
+/**
+ * Send an SMS using the legacy provider.
+ * @deprecated Use {@link sendSms} instead.
+ * TODO(TEAM-NOTIFICATIONS): Remove legacy SMS path after migration.
+ */
 export async function sendSmsLegacy(to: string, message: string): Promise<void> {
+  logger.warn({ msg: "Using deprecated legacy SMS sender", to });
   console.log("Sending SMS via legacy provider");
   console.log("SMS recipient:", to);
   console.log("SMS message length:", message.length);
@@ -28,5 +34,5 @@ export async function sendSmsLegacy(to: string, message: string): Promise<void> 
 
 async function simulateSmsProvider(to: string, message: string): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, 100));
-  console.log("SMS provider responded for", to);
+  logger.info({ msg: "SMS provider responded", to });
 }

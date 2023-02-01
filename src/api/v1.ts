@@ -4,6 +4,8 @@ import { sendSmsLegacy } from '../services/sms';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../utils/logger';
 
+// TODO(TEAM-NOTIFICATIONS): Deprecate v1 API and migrate clients to v2.
+
 export const v1Router = Router();
 
 interface SendRequest {
@@ -19,8 +21,7 @@ v1Router.post('/send', async (req: Request, res: Response) => {
   const { type, to, subject, body } = req.body as SendRequest;
   const id = uuidv4();
 
-  console.log("Received send request", { id, type, to });
-  logger.info({ msg: "Processing v1 send request", id, type, to });
+  logger.warn({ msg: "V1 API is deprecated, use V2 API instead", id, type, to });
 
   try {
     if (type === 'email') {
@@ -28,7 +29,7 @@ v1Router.post('/send', async (req: Request, res: Response) => {
     } else if (type === 'sms') {
       await sendSmsLegacy(to, body);
     } else {
-      console.error("Unknown notification type:", type);
+      logger.error({ msg: "Unknown notification type", type });
       res.status(400).json({ error: 'Unknown notification type' });
       return;
     }
@@ -37,7 +38,6 @@ v1Router.post('/send', async (req: Request, res: Response) => {
     logger.info({ msg: "Notification sent via v1 API", id });
     res.json({ id, status: 'sent' });
   } catch (error) {
-    console.error("Failed to send notification:", error);
     logger.error({ msg: "Failed to send notification", id, error: String(error) });
     notificationStore.set(id, { status: 'failed', type });
     res.status(500).json({ id, status: 'failed', error: 'Send failed' });
@@ -46,7 +46,7 @@ v1Router.post('/send', async (req: Request, res: Response) => {
 
 v1Router.get('/status/:id', (req: Request, res: Response) => {
   const { id } = req.params;
-  console.log("Status check for notification:", id);
+  logger.info({ msg: "Status check via v1 API", id });
 
   const notification = notificationStore.get(id);
   if (!notification) {

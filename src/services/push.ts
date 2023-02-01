@@ -20,5 +20,5 @@ export async function sendPush(deviceToken: string, notification: PushNotificati
 
 async function simulatePushProvider(deviceToken: string, notification: PushNotification): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, 50));
-  console.log("Push provider responded for device", deviceToken);
+  logger.info({ msg: "Push provider responded", deviceToken });
 }

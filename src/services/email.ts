@@ -28,7 +28,13 @@ export async function sendEmail(to: string, subject: string, body: string): Prom
   }
 }
 
+/**
+ * Send an email using the legacy SMTP provider.
+ * @deprecated Use {@link sendEmail} instead.
+ * TODO(TEAM-NOTIFICATIONS): Remove legacy email path after migration.
+ */
 export async function sendEmailLegacy(to: string, subject: string, body: string): Promise<void> {
+  logger.warn({ msg: "Using deprecated legacy email sender", to, subject });
   console.log("Sending email via legacy SMTP");
   console.log("Email recipient:", to);
   console.log("Email subject:", subject);

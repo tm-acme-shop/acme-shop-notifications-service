@@ -8,17 +8,16 @@ const PORT = process.env.PORT || 3002;
 
 app.use(express.json());
 
+// TODO(TEAM-NOTIFICATIONS): Remove v1 router after full migration to v2.
 app.use('/api/v1', v1Router);
 app.use('/api/v2', v2Router);
 
 app.get('/health', (req, res) => {
-  console.log("Health check requested");
   logger.info({ msg: "Health check", status: 'ok' });
   res.json({ status: 'ok' });
 });
 
 app.listen(PORT, () => {
-  console.log(`Notifications service started on port ${PORT}`);
   logger.info({ msg: "Server started", port: PORT });
 });
 
