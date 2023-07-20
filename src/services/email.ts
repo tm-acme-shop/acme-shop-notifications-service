@@ -20,6 +20,7 @@ export interface EmailOptions {
   templateData?: Record<string, unknown>;
 }
 
+// PLAT-045: Email service migrated to structured logging (2023-07)
 export async function sendEmail(options: EmailOptions): Promise<void>;
 export async function sendEmail(to: string, subject: string, body: string): Promise<void>;
 export async function sendEmail(
