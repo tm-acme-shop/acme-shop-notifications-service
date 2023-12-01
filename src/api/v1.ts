@@ -15,11 +15,12 @@ interface SendRequest {
   body: string;
 }
 
-const notificationStore: Map<string, { status: string; type: string }> = new Map();
+const notificationStore: Map<string, { status: string; type: string; createdAt: string }> = new Map();
 
 v1Router.post('/send', async (req: Request, res: Response) => {
   const { type, to, subject, body } = req.body as SendRequest;
   const id = uuidv4();
+  const createdAt = new Date().toISOString();
 
   logger.warn({ msg: "V1 API is deprecated, use V2 API instead", id, type, to });
 
@@ -34,12 +35,12 @@ v1Router.post('/send', async (req: Request, res: Response) => {
       return;
     }
 
-    notificationStore.set(id, { status: 'sent', type });
+    notificationStore.set(id, { status: 'sent', type, createdAt });
     logger.info({ msg: "Notification sent via v1 API", id });
     res.json({ id, status: 'sent' });
   } catch (error) {
     logger.error({ msg: "Failed to send notification", id, error: String(error) });
-    notificationStore.set(id, { status: 'failed', type });
+    notificationStore.set(id, { status: 'failed', type, createdAt });
     res.status(500).json({ id, status: 'failed', error: 'Send failed' });
   }
 });

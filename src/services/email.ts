@@ -11,19 +11,39 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export async function sendEmail(to: string, subject: string, body: string): Promise<void> {
-  logger.info({ msg: "Sending email (v2)", to, subject });
+export interface EmailOptions {
+  to: string;
+  subject: string;
+  body: string;
+  html?: string;
+  templateId?: string;
+  templateData?: Record<string, unknown>;
+}
+
+export async function sendEmail(options: EmailOptions): Promise<void>;
+export async function sendEmail(to: string, subject: string, body: string): Promise<void>;
+export async function sendEmail(
+  toOrOptions: string | EmailOptions,
+  subject?: string,
+  body?: string
+): Promise<void> {
+  const options: EmailOptions = typeof toOrOptions === 'string'
+    ? { to: toOrOptions, subject: subject!, body: body! }
+    : toOrOptions;
+
+  logger.info({ msg: "Sending email (v2)", to: options.to, subject: options.subject });
 
   try {
     await transporter.sendMail({
       from: process.env.EMAIL_FROM || 'noreply@acme-shop.com',
-      to,
-      subject,
-      text: body,
+      to: options.to,
+      subject: options.subject,
+      text: options.body,
+      html: options.html,
     });
-    logger.info({ msg: "Email sent successfully", to, subject });
+    logger.info({ msg: "Email sent successfully", to: options.to, subject: options.subject });
   } catch (error) {
-    logger.error({ msg: "Failed to send email", to, subject, error: String(error) });
+    logger.error({ msg: "Failed to send email", to: options.to, subject: options.subject, error: String(error) });
     throw error;
   }
 }

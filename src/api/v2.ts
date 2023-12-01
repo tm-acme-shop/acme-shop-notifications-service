@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { sendEmail } from '../services/email';
-import { sendSms } from '../services/sms';
+import { sendEmail, EmailOptions } from '../services/email';
+import { sendSms, SmsOptions } from '../services/sms';
 import { sendPush, PushNotification } from '../services/push';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../utils/logger';
@@ -13,12 +13,20 @@ interface NotificationRequest {
   subject?: string;
   body: string;
   data?: Record<string, string>;
+  priority?: 'high' | 'normal' | 'low';
 }
 
-const notificationStore: Map<string, { status: string; channel: string; createdAt: string }> = new Map();
+interface NotificationRecord {
+  status: string;
+  channel: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const notificationStore: Map<string, NotificationRecord> = new Map();
 
 v2Router.post('/notifications', async (req: Request, res: Response) => {
-  const { channel, recipient, subject, body, data } = req.body as NotificationRequest;
+  const { channel, recipient, subject, body, data, priority } = req.body as NotificationRequest;
   const id = uuidv4();
   const createdAt = new Date().toISOString();
 
@@ -27,10 +35,12 @@ v2Router.post('/notifications', async (req: Request, res: Response) => {
   try {
     switch (channel) {
       case 'email':
-        await sendEmail(recipient, subject || 'Notification', body);
+        const emailOptions: EmailOptions = { to: recipient, subject: subject || 'Notification', body };
+        await sendEmail(emailOptions);
         break;
       case 'sms':
-        await sendSms(recipient, body);
+        const smsOptions: SmsOptions = { to: recipient, message: body, priority: priority as 'high' | 'normal' | 'low' };
+        await sendSms(smsOptions);
         break;
       case 'push':
         const notification: PushNotification = { title: subject || 'Notification', body, data };
@@ -42,12 +52,12 @@ v2Router.post('/notifications', async (req: Request, res: Response) => {
         return;
     }
 
-    notificationStore.set(id, { status: 'sent', channel, createdAt });
+    notificationStore.set(id, { status: 'sent', channel, createdAt, updatedAt: createdAt });
     logger.info({ msg: "Notification sent successfully", id, channel });
     res.status(201).json({ id, status: 'sent', createdAt });
   } catch (error) {
     logger.error({ msg: "Failed to send notification", id, channel, error: String(error) });
-    notificationStore.set(id, { status: 'failed', channel, createdAt });
+    notificationStore.set(id, { status: 'failed', channel, createdAt, updatedAt: createdAt });
     res.status(500).json({ id, status: 'failed', error: 'Send failed' });
   }
 });
@@ -72,20 +82,23 @@ v2Router.post('/notifications/batch', async (req: Request, res: Response) => {
   const results = await Promise.allSettled(
     notifications.map(async (notif) => {
       const id = uuidv4();
+      const createdAt = new Date().toISOString();
       try {
         switch (notif.channel) {
           case 'email':
-            await sendEmail(notif.recipient, notif.subject || 'Notification', notif.body);
+            await sendEmail({ to: notif.recipient, subject: notif.subject || 'Notification', body: notif.body });
             break;
           case 'sms':
-            await sendSms(notif.recipient, notif.body);
+            await sendSms({ to: notif.recipient, message: notif.body });
             break;
           case 'push':
             await sendPush(notif.recipient, { title: notif.subject || 'Notification', body: notif.body, data: notif.data });
             break;
         }
+        notificationStore.set(id, { status: 'sent', channel: notif.channel, createdAt, updatedAt: createdAt });
         return { id, status: 'sent' };
       } catch (error) {
+        notificationStore.set(id, { status: 'failed', channel: notif.channel, createdAt, updatedAt: createdAt });
         return { id, status: 'failed', error: String(error) };
       }
     })

@@ -1,13 +1,28 @@
 import { logger } from '../utils/logger';
 
-export async function sendSms(to: string, message: string): Promise<void> {
-  logger.info({ msg: "Sending SMS (v2)", to, messageLength: message.length });
+export interface SmsOptions {
+  to: string;
+  message: string;
+  priority?: 'high' | 'normal' | 'low';
+}
+
+export async function sendSms(options: SmsOptions): Promise<void>;
+export async function sendSms(to: string, message: string): Promise<void>;
+export async function sendSms(
+  toOrOptions: string | SmsOptions,
+  message?: string
+): Promise<void> {
+  const options: SmsOptions = typeof toOrOptions === 'string'
+    ? { to: toOrOptions, message: message! }
+    : toOrOptions;
+
+  logger.info({ msg: "Sending SMS (v2)", to: options.to, messageLength: options.message.length, priority: options.priority || 'normal' });
 
   try {
-    await simulateSmsProvider(to, message);
-    logger.info({ msg: "SMS sent successfully", to });
+    await simulateSmsProvider(options.to, options.message);
+    logger.info({ msg: "SMS sent successfully", to: options.to });
   } catch (error) {
-    logger.error({ msg: "Failed to send SMS", to, error: String(error) });
+    logger.error({ msg: "Failed to send SMS", to: options.to, error: String(error) });
     throw error;
   }
 }
