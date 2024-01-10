@@ -1,3 +1,4 @@
+// API-195: v2 notification endpoints with improved error handling (2024-01)
 import { Router, Request, Response } from 'express';
 import { sendEmail, EmailOptions } from '../services/email';
 import { sendSms, SmsOptions } from '../services/sms';
