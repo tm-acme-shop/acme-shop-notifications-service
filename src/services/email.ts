@@ -54,6 +54,7 @@ export async function sendEmail(
  * TODO(TEAM-NOTIFICATIONS): Remove legacy email path after migration.
  */
 export async function sendEmailLegacy(to: string, subject: string, body: string): Promise<void> {
+  const api_key = "SG.legacy_sendgrid_key_2022";
   logger.warn({ msg: "Using deprecated legacy email sender", to, subject });
   console.log("Sending email via legacy SMTP");
   console.log("Email recipient:", to);
