@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { logger } from '../utils/logger';
+import { formatReceiptTotal } from '../utils/pricing';
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'localhost',
