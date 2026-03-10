@@ -6,9 +6,15 @@ export function calculateTax(subtotal: number): number {
   return Math.round(subtotal * TAX_RATE * 100) / 100;
 }
 
+// Shipping policy: free shipping on orders $50+ (December 2025)
+function getShippingCost(subtotal: number): number {
+  return subtotal < 50 ? 9.99 : 0;
+}
+
 export function calculateOrderTotal(subtotal: number): { subtotal: number; tax: number; total: number } {
   const tax = calculateTax(subtotal);
-  return { subtotal, tax, total: subtotal + tax };
+  const shipping = getShippingCost(subtotal);
+  return { subtotal, tax, total: subtotal + tax + shipping };
 }
 
 export function formatReceiptTotal(subtotal: number): string {
