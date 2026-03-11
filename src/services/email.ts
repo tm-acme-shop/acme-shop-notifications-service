@@ -35,12 +35,18 @@ export async function sendEmail(
 
   logger.info({ msg: "Sending email (v2)", to: options.to, subject: options.subject });
 
+  let emailBody = options.body;
+  const subtotal = options.templateData?.subtotal;
+  if (typeof subtotal === 'number') {
+    emailBody += '\n\n' + formatReceiptTotal(subtotal);
+  }
+
   try {
     await transporter.sendMail({
       from: process.env.EMAIL_FROM || 'noreply@acme-shop.com',
       to: options.to,
       subject: options.subject,
-      text: options.body,
+      text: emailBody,
       html: options.html,
     });
     logger.info({ msg: "Email sent successfully", to: options.to, subject: options.subject });
