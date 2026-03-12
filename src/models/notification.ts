@@ -31,7 +31,7 @@ export interface BatchNotificationRequest {
     recipient: string;
     subject?: string;
     body: string;
-    data?: Record<string, string>;
+    templateData?: Record<string, unknown>;
   }[];
 }
 

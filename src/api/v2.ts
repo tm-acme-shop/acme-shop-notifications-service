@@ -13,7 +13,7 @@ interface NotificationRequest {
   recipient: string;
   subject?: string;
   body: string;
-  data?: Record<string, string>;
+  templateData?: Record<string, unknown>;
   priority?: 'high' | 'normal' | 'low';
 }
 
@@ -27,7 +27,7 @@ interface NotificationRecord {
 const notificationStore: Map<string, NotificationRecord> = new Map();
 
 v2Router.post('/notifications', async (req: Request, res: Response) => {
-  const { channel, recipient, subject, body, data, priority } = req.body as NotificationRequest;
+  const { channel, recipient, subject, body, templateData, priority } = req.body as NotificationRequest;
   const id = uuidv4();
   const createdAt = new Date().toISOString();
 
@@ -36,7 +36,12 @@ v2Router.post('/notifications', async (req: Request, res: Response) => {
   try {
     switch (channel) {
       case 'email':
-        const emailOptions: EmailOptions = { to: recipient, subject: subject || 'Notification', body };
+        const emailOptions: EmailOptions = {
+          to: recipient,
+          subject: subject || 'Notification',
+          body,
+          templateData,
+        };
         await sendEmail(emailOptions);
         break;
       case 'sms':
@@ -44,7 +49,7 @@ v2Router.post('/notifications', async (req: Request, res: Response) => {
         await sendSms(smsOptions);
         break;
       case 'push':
-        const notification: PushNotification = { title: subject || 'Notification', body, data };
+        const notification: PushNotification = { title: subject || 'Notification', body };
         await sendPush(recipient, notification);
         break;
       default:
@@ -87,13 +92,18 @@ v2Router.post('/notifications/batch', async (req: Request, res: Response) => {
       try {
         switch (notif.channel) {
           case 'email':
-            await sendEmail({ to: notif.recipient, subject: notif.subject || 'Notification', body: notif.body });
+            await sendEmail({
+              to: notif.recipient,
+              subject: notif.subject || 'Notification',
+              body: notif.body,
+              templateData: notif.templateData,
+            });
             break;
           case 'sms':
             await sendSms({ to: notif.recipient, message: notif.body });
             break;
           case 'push':
-            await sendPush(notif.recipient, { title: notif.subject || 'Notification', body: notif.body, data: notif.data });
+            await sendPush(notif.recipient, { title: notif.subject || 'Notification', body: notif.body });
             break;
         }
         notificationStore.set(id, { status: 'sent', channel: notif.channel, createdAt, updatedAt: createdAt });

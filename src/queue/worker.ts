@@ -11,7 +11,7 @@ export interface NotificationJob {
   recipient: string;
   subject?: string;
   body: string;
-  data?: Record<string, string>;
+  templateData?: Record<string, unknown>;
   priority?: 'high' | 'normal' | 'low';
   retryCount?: number;
 }
@@ -26,6 +26,7 @@ export async function processNotificationJob(job: NotificationJob): Promise<void
           to: job.recipient,
           subject: job.subject || 'Notification',
           body: job.body,
+          templateData: job.templateData,
         };
         await sendEmail(emailOptions);
         break;
@@ -43,7 +44,6 @@ export async function processNotificationJob(job: NotificationJob): Promise<void
         const notification: PushNotification = {
           title: job.subject || 'Notification',
           body: job.body,
-          data: job.data,
         };
         await sendPush(job.recipient, notification);
         break;
