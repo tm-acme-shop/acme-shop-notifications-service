@@ -1,6 +1,5 @@
 import nodemailer from 'nodemailer';
 import { logger } from '../utils/logger';
-import { formatReceiptTotal } from '../utils/pricing';
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'localhost',
@@ -35,18 +34,12 @@ export async function sendEmail(
 
   logger.info({ msg: "Sending email (v2)", to: options.to, subject: options.subject });
 
-  let emailBody = options.body;
-  const subtotal = options.templateData?.subtotal;
-  if (typeof subtotal === 'number') {
-    emailBody += '\n\n' + formatReceiptTotal(subtotal);
-  }
-
   try {
     await transporter.sendMail({
       from: process.env.EMAIL_FROM || 'noreply@acme-shop.com',
       to: options.to,
       subject: options.subject,
-      text: emailBody,
+      text: options.body,
       html: options.html,
     });
     logger.info({ msg: "Email sent successfully", to: options.to, subject: options.subject });

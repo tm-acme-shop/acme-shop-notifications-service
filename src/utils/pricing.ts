@@ -1,5 +1,4 @@
 // Tax rate for receipt/invoice generation
-// TODO: verify this matches payments team - copied from old email templates
 const TAX_RATE = 0.085;
 
 export function calculateTax(subtotal: number): number {
