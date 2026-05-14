@@ -5,6 +5,7 @@ import { sendSms, SmsOptions } from '../services/sms';
 import { sendPush, PushNotification } from '../services/push';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../utils/logger';
+import { formatReceiptTotal } from '../utils/pricing';
 
 export const v2Router = Router();
 
@@ -26,6 +27,16 @@ interface NotificationRecord {
 
 const notificationStore: Map<string, NotificationRecord> = new Map();
 
+// Enrich email body with receipt details when order data is present
+function buildEmailBody(body: string, templateData?: Record<string, unknown>): string {
+  if (templateData?.subtotal) {
+    const receiptBody = formatReceiptTotal(templateData.subtotal as number);
+    logger.info({ msg: "Generated receipt from order data", subtotal: templateData.subtotal });
+    return templateData.useFormattedReceipt ? receiptBody : body;
+  }
+  return body;
+}
+
 v2Router.post('/notifications', async (req: Request, res: Response) => {
   const { channel, recipient, subject, body, templateData, priority } = req.body as NotificationRequest;
   const id = uuidv4();
@@ -36,10 +47,11 @@ v2Router.post('/notifications', async (req: Request, res: Response) => {
   try {
     switch (channel) {
       case 'email':
+        const emailBody = buildEmailBody(body, templateData);
         const emailOptions: EmailOptions = {
           to: recipient,
           subject: subject || 'Notification',
-          body,
+          body: emailBody,
           templateData,
         };
         await sendEmail(emailOptions);
@@ -95,7 +107,7 @@ v2Router.post('/notifications/batch', async (req: Request, res: Response) => {
             await sendEmail({
               to: notif.recipient,
               subject: notif.subject || 'Notification',
-              body: notif.body,
+              body: buildEmailBody(notif.body, notif.templateData),
               templateData: notif.templateData,
             });
             break;

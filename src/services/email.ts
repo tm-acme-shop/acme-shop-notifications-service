@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { logger } from '../utils/logger';
+import { formatReceiptTotal } from '../utils/pricing';
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'localhost',
@@ -31,6 +32,12 @@ export async function sendEmail(
   const options: EmailOptions = typeof toOrOptions === 'string'
     ? { to: toOrOptions, subject: subject!, body: body! }
     : toOrOptions;
+
+  // Build receipt body from order data if available
+  let emailBody = options.body;
+  if (options.templateData?.subtotal) {
+    emailBody = formatReceiptTotal(options.templateData.subtotal as number);
+  }
 
   logger.info({ msg: "Sending email (v2)", to: options.to, subject: options.subject });
 
