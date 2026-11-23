@@ -38,6 +38,7 @@ SMTP_HOST=smtp.example.com
 SMTP_PORT=587
 SMTP_USER=user
 SMTP_PASS=password
+SENDGRID_API_KEY=your_sendgrid_api_key
 TWILIO_ACCOUNT_SID=your_sid
 TWILIO_AUTH_TOKEN=your_token
 FIREBASE_PROJECT_ID=your_project
